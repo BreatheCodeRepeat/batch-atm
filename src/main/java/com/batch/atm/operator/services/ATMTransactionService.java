@@ -11,6 +11,8 @@ public class ATMTransactionService implements TransactionService {
 
     @Override
     public synchronized void setInitialAmount(BigDecimal amount) {
-        this.amount = amount;
+        if(this.amount == null){
+            this.amount = amount;
+        }
     }
 }

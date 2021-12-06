@@ -1,27 +1,25 @@
 package com.batch.atm.operator.config;
 
-import com.batch.atm.operator.model.Transaction;
+import com.batch.atm.operator.model.UserSession;
+import com.batch.atm.operator.batch.TransactionChunkReader;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableBatchProcessing
-public class BatchChunckConfig {
+public class BatchJobConfig {
 
     @Bean
     public Job job(JobBuilderFactory jobBuilderFactory,
-                   ItemReader<Transaction> itemReader,
-                   ItemProcessor<Transaction, Transaction> itemProcessor,
-                   ItemWriter<Transaction> itemWriter,
                    Step readTransactionsStep,
                    Step readAmountStep){
        return jobBuilderFactory.get("Transaction-Operator")
@@ -32,27 +30,13 @@ public class BatchChunckConfig {
     }
 
     @Bean
-    public ItemReader<Transaction> itemReader() {
-        return null;
-    }
+    protected Step readTransactionsStep(TransactionChunkReader reader,
+                                        ItemProcessor<UserSession, UserSession> processor,
+                                        ItemWriter<UserSession> writer,
+                                        StepBuilderFactory stepBuilderFactory) {
 
-    @Bean
-    public ItemProcessor<Transaction, Transaction> itemProcessor() {
-        return null;
-    }
-
-    @Bean
-    public ItemWriter<Transaction> itemWriter() {
-        return null;
-    }
-
-    @Bean
-    protected Step readTransactionsStep(ItemReader<Transaction> reader,
-                                ItemProcessor<Transaction, Transaction> processor,
-                                ItemWriter<Transaction> writer,
-                                StepBuilderFactory stepBuilderFactory) {
         return stepBuilderFactory.get("processTransactions")
-                .<Transaction, Transaction> chunk(2)
+                .<UserSession,UserSession>chunk(reader)
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
@@ -60,9 +44,9 @@ public class BatchChunckConfig {
     }
 
     @Bean
-    protected Step readAmountStep(StepBuilderFactory stepBuilderFactory) {
+    protected Step readAmountStep(StepBuilderFactory stepBuilderFactory, Tasklet tasklet) {
         return stepBuilderFactory.get("readAmount")
-                .tasklet(null)
+                .tasklet(tasklet)
                 .build();
     }
 
