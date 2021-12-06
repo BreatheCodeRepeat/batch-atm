@@ -34,7 +34,7 @@ import java.util.Map;
 
 @Component
 @Slf4j
-public class TransactionChunkReader extends CompletionPolicySupport implements ItemReader<UserSession> {
+public class TransactionChunkPolicyReader extends CompletionPolicySupport implements ItemReader<UserSession> {
 
     private BlankLineCompletionContext cc;
     private SingleItemPeekableItemReader<FieldSet> peekAbleDelegate;

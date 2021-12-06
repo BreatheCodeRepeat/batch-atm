@@ -1,7 +1,7 @@
 package com.batch.atm.operator.config;
 
 import com.batch.atm.operator.model.UserSession;
-import com.batch.atm.operator.batch.TransactionChunkReader;
+import com.batch.atm.operator.batch.TransactionChunkPolicyReader;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -30,7 +30,7 @@ public class BatchJobConfig {
     }
 
     @Bean
-    protected Step readTransactionsStep(TransactionChunkReader reader,
+    protected Step readTransactionsStep(TransactionChunkPolicyReader reader,
                                         ItemProcessor<UserSession, UserSession> processor,
                                         ItemWriter<UserSession> writer,
                                         StepBuilderFactory stepBuilderFactory) {
