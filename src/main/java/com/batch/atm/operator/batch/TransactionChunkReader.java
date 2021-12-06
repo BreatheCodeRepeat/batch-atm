@@ -1,12 +1,18 @@
 package com.batch.atm.operator.batch;
 
 import com.batch.atm.operator.config.AppConfig;
-import com.batch.atm.operator.model.*;
+import com.batch.atm.operator.model.BalanceTransaction;
+import com.batch.atm.operator.model.Transaction;
+import com.batch.atm.operator.model.UserBalance;
+import com.batch.atm.operator.model.UserCredentials;
+import com.batch.atm.operator.model.UserSession;
+import com.batch.atm.operator.model.WithdrawTransaction;
 import com.batch.atm.operator.utils.Readers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.AfterStep;
 import org.springframework.batch.core.annotation.BeforeStep;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -21,60 +27,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
 public class TransactionChunkReader extends CompletionPolicySupport implements ItemReader<UserSession> {
 
-//    private FlatFileItemReader<FieldSet> delegate;
-    private TransactionChunkReader.EOFCompletionContext cc;
+    private BlankLineCompletionContext cc;
     private SingleItemPeekableItemReader<FieldSet> peekAbleDelegate;
 
-
-    protected class EOFCompletionContext extends RepeatContextSupport
-    {
-        boolean eof = false;
-        public EOFCompletionContext (RepeatContext context)
-        {
-            super(context);
-        }
-
-        public void update()
-        {
-            final FieldSet next;
-            try
-            {
-                next = peekAbleDelegate.peek();
-            }
-            catch (Exception e)
-            {
-                throw new NonTransientResourceException("Unable to peek", e);
-            }
-            // EOF?
-            this.eof = next.getFieldCount() == 0;
-        }
-
-        public boolean isComplete() {
-            return this.eof;
-        }
-    }
-
     @Override
-    public void update(RepeatContext context){
-        this.cc.update();
-    }
-
-    @Override
-    public boolean isComplete(RepeatContext context)
-    {
+    public boolean isComplete(RepeatContext context) {
         return this.cc.isComplete();
     }
 
     @Override
-    public RepeatContext start(RepeatContext context)
-    {
-        this.cc = new EOFCompletionContext(context);
+    public RepeatContext start(RepeatContext context) {
+        this.cc = new BlankLineCompletionContext(context);
         return cc;
     }
 
@@ -95,9 +67,9 @@ public class TransactionChunkReader extends CompletionPolicySupport implements I
 
         FieldSet line;
         String[] lineValues;
-        for (linesCounter = 0 ;(line = peekAbleDelegate.read()) != null;linesCounter++) {
+        for (linesCounter = 0; (line = peekAbleDelegate.read()) != null; linesCounter++) {
             lineValues = line.getValues();
-            if(line.getFieldCount() == 3){
+            if (line.getFieldCount() == 3) {
                 sessionBuilder.credentials(
                         new UserCredentials(
                                 Integer.parseInt(lineValues[0]),
@@ -105,16 +77,14 @@ public class TransactionChunkReader extends CompletionPolicySupport implements I
                                 Integer.parseInt(lineValues[2])
                         )
                 );
-            }
-            else if(line.getFieldCount() == 2){
-                if(lineValues[0].equals("W")){
+            } else if (line.getFieldCount() == 2) {
+                if (lineValues[0].equals("W")) {
                     transactions.add(
                             new WithdrawTransaction(
                                     Readers.parseDecimal(lineValues[1])
                             )
                     );
-                }
-                else {
+                } else {
                     sessionBuilder.balance(
                             new UserBalance(
                                     Readers.parseDecimal(lineValues[0]),
@@ -122,33 +92,20 @@ public class TransactionChunkReader extends CompletionPolicySupport implements I
                             )
                     );
                 }
+            } else if (line.getFieldCount() == 1 && lineValues[0].equals("B")) {
+                transactions.add(
+                        new BalanceTransaction()
+                );
             }
-            else if(line.getFieldCount() == 1 && lineValues[0].equals("B")){
-                    transactions.add(
-                            new BalanceTransaction()
-                    );
-            }
-//            if(line.getFieldCount() == 2 && line.getNames() == 0)
 
-//            String[] fieldSetNames = line.getNames();
-//            if(Arrays.equals(fieldSetNames, userCredentials)){
-//
-//            }
-//            else if((Arrays.equals(fieldSetNames, userBalance))){
-//
-//            }
-//            else if((Arrays.equals(fieldSetNames, withdrawTransactionFields))){
-//
-//            }
-//            else if(fieldSetNames.length == 1 && fieldSetNames[0].equals("symbol")){
-//
-//            }
-            if(peekAbleDelegate.peek().getFieldCount() == 0){
+            FieldSet nextSet = peekAbleDelegate.peek();
+
+            if (nextSet == null || nextSet.getFieldCount() == 0) {
                 break;
             }
         }
 
-        if(linesCounter == 0){
+        if (linesCounter == 0) {
             return null;
         }
 
@@ -161,7 +118,6 @@ public class TransactionChunkReader extends CompletionPolicySupport implements I
         FlatFileItemReader<FieldSet> delegate = new FlatFileItemReader<>();
         delegate.setResource(new ClassPathResource(config.getFileName()));
         delegate.setLinesToSkip(1);
-//        delegate.setRecordSeparatorPolicy(new BlankLineRecordSeparatorPolicy());
         delegate.setLineMapper(buildLineMapper());
         delegate.open(stepExecution.getExecutionContext());
         peekAbleDelegate = new SingleItemPeekableItemReader<>();
@@ -173,7 +129,7 @@ public class TransactionChunkReader extends CompletionPolicySupport implements I
         peekAbleDelegate.close();
     }
 
-    private DefaultLineMapper<FieldSet> buildLineMapper(){
+    private DefaultLineMapper<FieldSet> buildLineMapper() {
         final DefaultLineMapper<FieldSet> defaultLineMapper = new DefaultLineMapper<>();
         final PatternMatchingCompositeLineTokenizer compositeLineTokenizer = new PatternMatchingCompositeLineTokenizer();
         final Map<String, LineTokenizer> tokenizers = new HashMap<>();
@@ -181,9 +137,6 @@ public class TransactionChunkReader extends CompletionPolicySupport implements I
         tokenizers.put(ACCOUNT_DETAILS, buildSpaceDelimitedTokenizer());
         tokenizers.put(WITHDRAW_TRANSACTION, buildSpaceDelimitedTokenizer());
         tokenizers.put(BALANCE_TRANSACTION, buildBalanceTransactionTokenizer());
-//        tokenizers.put("*", buildAccountDetailsTokenizer());
-//        tokenizers.put("W*", buildAccountDetailsTokenizer(1 ,3));
-//        tokenizers.put("B", buildAccountDetailsTokenizer(1 ,3));
 
         compositeLineTokenizer.setTokenizers(tokenizers);
         defaultLineMapper.setLineTokenizer(compositeLineTokenizer);
@@ -191,53 +144,6 @@ public class TransactionChunkReader extends CompletionPolicySupport implements I
 
         return defaultLineMapper;
     }
-
-//    private LineTokenizer buildBalanceTransactionsTokenizer() {
-//        FixedLengthTokenizer tokenizer = new FixedLengthTokenizer();
-//
-//        tokenizer.setColumns(
-//                new Range(1, 1)
-//        );
-//
-//        tokenizer.setNames("symbol");
-//        tokenizer.setStrict(false);
-//        return tokenizer;
-//    }
-
-//    private LineTokenizer buildAccountDetailsTokenizer() {
-//        FixedLengthTokenizer tokenizer = new FixedLengthTokenizer();
-//
-//        tokenizer.setColumns(
-//                new Range(1, 8),
-//                new Range(10, 13),
-//                new Range(15, 18)
-//        );
-//
-//        tokenizer.setNames(userCredentials);
-//        tokenizer.setStrict(false);
-//        return tokenizer;
-//    }
-
-//    private LineTokenizer buildAccountDetailsTokenizer() {
-//        DelimitedLineTokenizer lineTokenizer = new DelimitedLineTokenizer(" ");
-//        lineTokenizer.setStrict(false);
-//        return lineTokenizer;
-//    }
-
-//    private LineTokenizer buildAccountDetailsTokenizer(int s, int f) {
-//        FixedLengthTokenizer tokenizer = new FixedLengthTokenizer();
-//        DelimitedLineTokenizer delimitedLineTokenizer = new DelimitedLineTokenizer(" ");
-//        delimitedLineTokenizer.setNames("test","test2");
-//        delimitedLineTokenizer.setStrict(false);
-//        tokenizer.setColumns(
-//                new Range(s, f)
-//        );
-//
-//        tokenizer.setNames("test");
-//        tokenizer.setStrict(false);
-//        tokenizer.tokenize("1");
-//        return tokenizer;
-//    }
 
     private LineTokenizer buildBalanceTransactionTokenizer() {
         FixedLengthTokenizer tokenizer = new FixedLengthTokenizer();
@@ -255,4 +161,22 @@ public class TransactionChunkReader extends CompletionPolicySupport implements I
         tokenizer.setStrict(false);
         return tokenizer;
     }
+
+    protected class BlankLineCompletionContext extends RepeatContextSupport {
+
+        public BlankLineCompletionContext(RepeatContext context) {
+            super(context);
+        }
+
+        public boolean isComplete() {
+            final FieldSet next;
+            try {
+                next = peekAbleDelegate.peek();
+            } catch (Exception e) {
+                throw new NonTransientResourceException("Unable to peek", e);
+            }
+            return next == null || next.getFieldCount() == 0;
+        }
+    }
+
 }

@@ -12,7 +12,7 @@ public class TransactionChunkProcessor implements ItemProcessor<UserSession,User
     @Override
     public UserSession process(UserSession userSession) throws Exception {
         log.info("Started process");
-         log.info(userSession.toString());
-         return userSession;
+        log.info(userSession.toString());
+        return userSession;
     }
 }

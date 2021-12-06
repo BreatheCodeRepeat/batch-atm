@@ -32,14 +32,4 @@ public class AmountReaderTasklet implements Tasklet {
         transactionService.setInitialAmount(amount);
         return RepeatStatus.FINISHED;
     }
-
-//    @Override
-//    public ExitStatus afterStep(StepExecution stepExecution) {
-//        stepExecution
-//                .getJobExecution()
-//                .getExecutionContext()
-//                .put("amount", this.amount);
-//        log.debug("Amount Reader ended.");
-//        return ExitStatus.COMPLETED;
-//    }
 }
