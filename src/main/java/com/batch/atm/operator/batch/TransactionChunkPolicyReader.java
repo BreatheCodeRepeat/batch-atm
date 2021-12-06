@@ -25,6 +25,7 @@ import org.springframework.batch.repeat.context.RepeatContextSupport;
 import org.springframework.batch.repeat.policy.CompletionPolicySupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -51,7 +52,7 @@ public class TransactionChunkPolicyReader extends CompletionPolicySupport implem
     }
 
     @Autowired
-    private AppConfig config;
+    private Resource inputResource;
 
     private static final String ACCOUNT_DETAILS = "*";
     private static final String WITHDRAW_TRANSACTION = "W*";
@@ -116,7 +117,7 @@ public class TransactionChunkPolicyReader extends CompletionPolicySupport implem
     @BeforeStep
     public void beforeStep(StepExecution stepExecution) {
         FlatFileItemReader<FieldSet> delegate = new FlatFileItemReader<>();
-        delegate.setResource(new ClassPathResource(config.getFileName()));
+        delegate.setResource(inputResource);
         delegate.setLinesToSkip(1);
         delegate.setLineMapper(buildLineMapper());
         delegate.open(stepExecution.getExecutionContext());

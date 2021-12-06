@@ -8,4 +8,5 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "app")
 public class AppConfig {
     private String fileName;
+    private String targetFileName;
 }

@@ -10,6 +10,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +28,7 @@ public class AmountReaderTasklet implements Tasklet {
     @Override
     public RepeatStatus execute(StepContribution stepContribution,
                                 ChunkContext chunkContext) throws Exception {
-        Resource resource = new ClassPathResource(appConfig.getFileName());
+        Resource resource = new FileSystemResource(appConfig.getFileName());
         BigDecimal amount = Readers.readAtmAmount(resource);
         transactionService.setInitialAmount(amount);
         return RepeatStatus.FINISHED;
