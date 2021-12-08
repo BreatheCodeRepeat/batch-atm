@@ -1,6 +1,5 @@
 package com.batch.atm.operator.batch;
 
-import com.batch.atm.operator.config.AppConfig;
 import com.batch.atm.operator.model.BalanceTransaction;
 import com.batch.atm.operator.model.Transaction;
 import com.batch.atm.operator.model.UserBalance;
@@ -12,19 +11,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.AfterStep;
 import org.springframework.batch.core.annotation.BeforeStep;
-import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.NonTransientResourceException;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.mapping.PassThroughFieldSetMapper;
-import org.springframework.batch.item.file.transform.*;
+import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
+import org.springframework.batch.item.file.transform.FieldSet;
+import org.springframework.batch.item.file.transform.FixedLengthTokenizer;
+import org.springframework.batch.item.file.transform.LineTokenizer;
+import org.springframework.batch.item.file.transform.PatternMatchingCompositeLineTokenizer;
+import org.springframework.batch.item.file.transform.Range;
 import org.springframework.batch.item.support.SingleItemPeekableItemReader;
 import org.springframework.batch.repeat.RepeatContext;
 import org.springframework.batch.repeat.context.RepeatContextSupport;
 import org.springframework.batch.repeat.policy.CompletionPolicySupport;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
@@ -73,7 +75,7 @@ public class TransactionChunkPolicyReader extends CompletionPolicySupport implem
             if (line.getFieldCount() == 3) {
                 sessionBuilder.credentials(
                         new UserCredentials(
-                                Integer.parseInt(lineValues[0]),
+                                Long.parseLong(lineValues[0]),
                                 Integer.parseInt(lineValues[1]),
                                 Integer.parseInt(lineValues[2])
                         )

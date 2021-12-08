@@ -1,7 +1,6 @@
 package com.batch.atm.operator.utils;
 
 import com.batch.atm.operator.exceptions.MalformedAmountException;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import java.io.BufferedReader;
@@ -16,15 +15,13 @@ public class Readers {
     public static BigDecimal readAtmAmount(Resource resource) throws MalformedAmountException {
         try (BufferedReader br = new BufferedReader(new FileReader(resource.getFile()))) {
             return parseDecimal(br.readLine());
-        }
-        catch (IOException e){
+        } catch (IOException e) {
             throw new MalformedAmountException(
-                    String.format("Could read text file located at %s",resource.getFilename()),e
+                    String.format("Could read text file located at %s", resource.getFilename()), e
             );
-        }
-        catch (ParseException e){
+        } catch (ParseException e) {
             throw new MalformedAmountException(
-                    String.format("Could not parse ATM amount decimal provided in text file located at %s",resource.getFilename()),e
+                    String.format("Could not parse ATM amount decimal provided in text file located at %s", resource.getFilename()), e
             );
         }
     }

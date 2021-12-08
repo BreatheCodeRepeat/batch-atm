@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class UserCredentials {
-    private int iban;
+    private Long iban;
     private int pin;
     private int insertPin;
 }

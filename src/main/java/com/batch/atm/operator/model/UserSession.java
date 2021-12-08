@@ -10,5 +10,6 @@ import java.util.List;
 public class UserSession {
     private UserCredentials credentials;
     private UserBalance balance;
+    private UserBalance revertingBalance;
     private List<Transaction> transactions;
 }

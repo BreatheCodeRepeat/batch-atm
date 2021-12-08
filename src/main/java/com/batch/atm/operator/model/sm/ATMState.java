@@ -1,11 +1,12 @@
 package com.batch.atm.operator.model.sm;
 
 public enum ATMState {
-    INIT_ATM,
+    BALANCE_OK,
+    FUND_ERROR,
     INIT_SESSION,
-    PROCESSING_TRANSACTION,
-    CLOSE_SESSION,
-    SESSION_AUTH,
-    DISPOSE_ATM
-
+    INIT_TRANSACTION,
+    DECLINED_TRANSACTIONS,
+    DISPOSE_ATM,
+    ATM_READY,
+    ATM_EMPTY
 }
