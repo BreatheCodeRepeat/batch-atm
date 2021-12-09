@@ -46,6 +46,16 @@ public class ATMTransactionService implements TransactionService {
     }
 
     @Override
+    public Transaction rollBackATMRetrieval(Transaction transaction){
+        if(transaction.hasError()
+                && transaction instanceof WithdrawTransaction
+                && transaction.getErrorCode().equals(ErrorCode.FUNDS_ERR)){
+            amount = amount.add(((WithdrawTransaction) transaction).getAmount());
+        }
+        return transaction;
+    }
+
+    @Override
     public Transaction retrieveAmount(Transaction transaction){
         if(!transaction.hasError() && isDecimalBiggerThanZero(amount) || isDecimalZero(amount)){
             if(transaction instanceof WithdrawTransaction){

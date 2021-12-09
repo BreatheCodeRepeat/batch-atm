@@ -40,7 +40,7 @@ class ProcessingServiceTest extends AbstractTransactionServiceTest {
         transactionService.setAmount(new BigDecimal(5000));
 
         //When
-        processingService.processSession(session).blockLast();
+        processingService.processSession().blockLast();
 
         //Then
         assertEquals("Amount should be changed", new BigDecimal(3000),transactionService.getAmount());

@@ -1,5 +1,6 @@
 package com.batch.atm.operator.services.impl;
 
+import com.batch.atm.operator.model.Transaction;
 import com.batch.atm.operator.model.UserCredentials;
 import com.batch.atm.operator.model.UserSession;
 import com.batch.atm.operator.model.sm.ATMEvent;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 @Service
 public class ATMStateMachineService implements StateMachineService {
     public static final String USER_SESSION_HEADER = "userSession";
+    public static final String TRANSACTION_HEADER = "transaction";
     public static final String USER_CREDENTIALS_HEADER = "userCredentials";
     public static final String AMOUNT_HEADER = "amount";
 
@@ -27,6 +29,19 @@ public class ATMStateMachineService implements StateMachineService {
                         () -> MessageBuilder.withPayload(event).setHeader(USER_SESSION_HEADER,session).build()
                 ));
     }
+
+    @Override
+    public Flux<Transaction> sendEvent(Transaction transaction,
+                                       ATMEvent event,
+                                       StateMachine<ATMState, ATMEvent> sm){
+        return sm.sendEvent(
+                Mono.fromSupplier(
+                        () -> MessageBuilder.withPayload(event)
+                                .setHeader(TRANSACTION_HEADER,transaction)
+                                .build()
+                )).map(result -> transaction);
+    }
+
 
     @Override
     public Flux<StateMachineEventResult<ATMState, ATMEvent>> sendEvent(BigDecimal amount, UserSession session, ATMEvent event, StateMachine<ATMState,ATMEvent> sm){

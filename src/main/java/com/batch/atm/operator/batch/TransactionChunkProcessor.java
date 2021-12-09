@@ -3,8 +3,8 @@ package com.batch.atm.operator.batch;
 import com.batch.atm.operator.model.Transaction;
 import com.batch.atm.operator.model.UserBalance;
 import com.batch.atm.operator.model.UserSession;
-import com.batch.atm.operator.services.impl.ATMTransactionService;
 import com.batch.atm.operator.services.ProcessingService;
+import com.batch.atm.operator.services.TransactionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class TransactionChunkProcessor implements ItemProcessor<UserSession, Lis
     private ProcessingService processingService;
 
     @Autowired
-    ATMTransactionService atmTransactionService;
+    TransactionService atmTransactionService;
 
     @Override
     public List<String> process(UserSession userSession) throws Exception {
@@ -33,7 +33,7 @@ public class TransactionChunkProcessor implements ItemProcessor<UserSession, Lis
         log.info("Processing account transactions {}", iban);
         atmTransactionService.setUserSession(userSession);
         setTransactionsBalance(userSession);
-        processingService.processSession(userSession).blockLast();
+        processingService.processSession().blockLast();
         return generateOutputAsString(userSession);
     }
 

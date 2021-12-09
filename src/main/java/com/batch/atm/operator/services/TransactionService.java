@@ -9,8 +9,10 @@ import java.math.BigDecimal;
 public interface TransactionService {
     void setUserSession(UserSession session);
     void setAmount(BigDecimal amount);
+    UserSession getUserSession();
     BigDecimal getAmount();
     Transaction retrieveAmount(Transaction transaction);
     boolean verifyPin(UserCredentials credentials);
     Transaction verifyAccountBalance(Transaction transaction);
+    Transaction rollBackATMRetrieval(Transaction transaction);
 }

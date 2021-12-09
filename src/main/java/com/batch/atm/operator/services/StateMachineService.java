@@ -1,5 +1,6 @@
 package com.batch.atm.operator.services;
 
+import com.batch.atm.operator.model.Transaction;
 import com.batch.atm.operator.model.UserCredentials;
 import com.batch.atm.operator.model.UserSession;
 import com.batch.atm.operator.model.sm.ATMEvent;
@@ -14,5 +15,6 @@ public interface StateMachineService {
     Flux<StateMachineEventResult<ATMState, ATMEvent>> sendEvent(UserSession session, ATMEvent event, StateMachine<ATMState, ATMEvent> sm);
     Flux<StateMachineEventResult<ATMState, ATMEvent>> sendEvent(UserCredentials credentials, ATMEvent event, StateMachine<ATMState, ATMEvent> sm);
     Flux<StateMachineEventResult<ATMState, ATMEvent>> sendEvent(ATMEvent event, StateMachine<ATMState, ATMEvent> sm);
+    Flux<Transaction> sendEvent(Transaction transaction, ATMEvent event, StateMachine<ATMState, ATMEvent> sm);
     Flux<StateMachineEventResult<ATMState, ATMEvent>> sendEvent(BigDecimal amount, UserSession session, ATMEvent event, StateMachine<ATMState,ATMEvent> sm);
 }
