@@ -1,0 +1,16 @@
+package com.batch.atm.operator.model.sm;
+
+public enum ATMEvent {
+    READ_SESSION,
+    AUTH_EVENT,
+    AUTH_APPROVE,
+    AUTH_DECLINE,
+    PROCESS_TRANSACTION,
+    NOT_ENOUGHT_BALANCE,
+    CHECK_BALANCE,
+    NEW_TRANSACTION,
+    ACCEPT_TRANSACTION,
+    NOT_ENOUGHT_CASH,
+    ATM_HAS_CASH,
+    BATCH_COMPLETE
+}
