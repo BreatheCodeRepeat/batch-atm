@@ -35,9 +35,6 @@ public class AuthAction implements ReactiveAction<ATMState, ATMEvent> {
                     ).collectList()
                     .then();
         } else {
-//            session.getTransactions().forEach(
-//                    transaction -> transaction.setErrorCode(ErrorCode.ACCOUNT_ERR)
-//            );
             return stateMachineService.sendEvent(
                             session, ATMEvent.AUTH_DECLINE,
                             stateContext.getStateMachine()

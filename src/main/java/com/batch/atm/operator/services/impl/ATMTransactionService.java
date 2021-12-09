@@ -46,13 +46,12 @@ public class ATMTransactionService implements TransactionService {
     }
 
     @Override
-    public Transaction retrieveAmount(Transaction transaction,UserSession session){
+    public Transaction retrieveAmount(Transaction transaction){
         if(!transaction.hasError() && isDecimalBiggerThanZero(amount) || isDecimalZero(amount)){
             if(transaction instanceof WithdrawTransaction){
                 BigDecimal retainAmount = copyDecimal(amount);
                 retainAmount = retainAmount.subtract(((WithdrawTransaction) transaction).getAmount());
                 if(isDecimalSmallerThanZero(retainAmount)){
-                    revertTransaction(transaction,session);
                     transaction.setErrorCode(ErrorCode.ATM_ERR);
                     return transaction;
                 }
@@ -63,14 +62,6 @@ public class ATMTransactionService implements TransactionService {
             }
         }
         return transaction;
-    }
-
-    @Override
-    public void revertTransaction(Transaction transaction,UserSession session){
-        session.setBalance(new UserBalance(
-                session.getRevertingBalance().getAmount(),
-                session.getRevertingBalance().getOverdraft()
-        ));
     }
 
     @Override

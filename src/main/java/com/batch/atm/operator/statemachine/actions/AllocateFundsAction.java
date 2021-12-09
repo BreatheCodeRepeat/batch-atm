@@ -40,7 +40,7 @@ public class AllocateFundsAction implements ReactiveAction<ATMState, ATMEvent> {
 
     private Mono<Void> processTransactions(UserSession session, StateContext<ATMState, ATMEvent> stateContext) {
         return Flux.fromStream(session.getTransactions().stream())
-                .map(transaction -> transactionService.retrieveAmount(transaction, session))
+                .map(transaction -> transactionService.retrieveAmount(transaction))
                 .collectList()
                 .then()
                 .and(stateMachineService.sendEvent(ATMEvent.ATM_HAS_CASH,stateContext.getStateMachine()))
